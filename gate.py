@@ -198,6 +198,29 @@ def saveData(vehicleRates, databaseUID):
         print("Warning: could not save data.py (" + str(error) + ")")
 
 
+def loadData():
+    #Loads previously saved data from data.py
+    folder = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(folder, "data.py")
+
+    if os.path.exists(path):
+        try:
+            import runpy
+            savedData = runpy.run_path(path)
+
+            vehicleRates = savedData["vehicleRate"]
+            databaseUID = savedData["databaseUID"]
+
+            print("Previous data loaded!")
+            return vehicleRates, databaseUID
+
+        except (KeyError, OSError, SyntaxError) as error:
+            print("Could not load previous data: ", error)
+
+        print("No previous data found. Starting new configuration.")
+        return{}, {}
+
+
 # ----------------------------------------------------------------------
 # ENTRY BRANCH
 # ----------------------------------------------------------------------
@@ -324,7 +347,10 @@ def main():
     vehicleRates = {}
     databaseUID = {}
     try:
-        vehicleRates = configureRates()
+        vehicleRates, databaseUID = loadData()
+
+        if not vehicleRates:
+            vehicleRates = configureRates()
         saveData(vehicleRates, databaseUID)
 
         # Runs until the program is stopped (Ctrl+C)
